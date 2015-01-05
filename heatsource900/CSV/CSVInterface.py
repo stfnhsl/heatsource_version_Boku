@@ -29,6 +29,7 @@ from bisect import bisect
 from time import strptime, ctime, strftime, gmtime
 from calendar import timegm
 from datetime import datetime
+from dbfread import DBF
 import platform
 import pandas as pd
 
@@ -37,6 +38,7 @@ from ..Dieties.IniParamsDiety import IniParams
 from ..Stream.StreamNode import StreamNode
 from ..Utils.Dictionaries import Interpolator
 from ..Utils.easygui import buttonbox
+
 
 class CSVInterface(object):
     """Reads the Heat Source input CSV files, creates a list of StreamNode instances, and populates those StreamNodes"""
@@ -119,7 +121,7 @@ class CSVInterface(object):
                     "lcdensity": "# LANDCOVER DENSITY FOR LIDAR DATA",
                     "lcoverhang": "# LANDCOVER STREAM OVERHANG FOR LIDAR DATA (METERS)",
                     "vegDistMethod": "# VEGETATION ANGLE CALCULATION METHOD (point/zone)",
-                    "hydvelfile": "# HYDROLOGICAL VELOCITY FILE(m/s)",
+                    "hydvelfile": "# HYDROLOGICAL VELOCITY(m per s) FILE (csv or dbf)",
                     "hydvel": "# HYDROLOGICAL VELOCITY FILE USED (TRUE/FALSE)", }
             
         cf = pd.read_csv(join(inputdir,control_file),quotechar='"',quoting=0,header=None,na_values=None)
@@ -135,7 +137,7 @@ class CSVInterface(object):
         del(cf)
         
         # These might be blank, make them zeros # TODO check this works with new 9.0.0 implementation
-        for key in ["inflowsites","flushdays","wind_a","wind_b"]:
+        for key in ["inflowsites", "flushdays", "wind_a", "wind_b"]:
             IniParams[key] = 0.0 if not IniParams[key] else IniParams[key]
         
         # Convert string TRUE/FALSE to bool. Note this defaults to false if string is not formated exactly as 'TRUE'
@@ -465,16 +467,28 @@ class CSVInterface(object):
 
     # BOKU:
     def gethydrovel(self):
-        print ("Reading hydro velocity")
-        hydrovel = pd.read_csv(IniParams["inputdir"] + IniParams["hydvelfile"],
-                               index_col='Fkm', quotechar='"', quoting=0)
+        print("Reading hydro velocity")
+
+        if IniParams["hydvelfile"].endswith('.csv'):
+            print("csv file")
+            hydrovel = pd.read_csv(IniParams["inputdir"] + IniParams["hydvelfile"],
+                                   index_col='Fkm', quotechar='"', quoting=0)
+        else:
+            print("dbf file")
+            table = DBF(IniParams["inputdir"] + IniParams["hydvelfile"])
+            d = []
+            for record in table:
+                d.append((record['LENGTH']/1000, record['Geschw']))
+            hydrovel = pd.DataFrame(d, columns=['Fkm', 'hydro_vel']).set_index("Fkm")
+            hydrovel.sort_index(inplace=True, ascending=False)
 
         if not IniParams["hydvel"]:
             hydrovel.insert(1, "hydused", [False for i in range(len(hydrovel))])
         else:
             hydrovel.insert(1, "hydused", [True for i in range(len(hydrovel))])
-        # hydrovel.sort_index(inplace=True)
+
         print(hydrovel)
+
         return hydrovel
 
     def GetTimeListString(self):
@@ -482,9 +496,9 @@ class CSVInterface(object):
         corresponding to the data start and end dates available in the control file"""
         print("Creating timelist")
         timelist = []        
-        timelist = range(IniParams['date'],IniParams['end']+60,3600) # hourly timestep
+        timelist = range(IniParams['date'], IniParams['end']+60,3600) # hourly timestep
         for i in range(0,len(timelist)):
-            timelist[i] = strftime("%m/%d/%Y %H:%M",gmtime(timelist[i]))
+            timelist[i] = strftime("%m/%d/%Y %H:%M", gmtime(timelist[i]))
         return timelist    
                
     def GetTimelistUNIX(self):

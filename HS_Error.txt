@@ -3,12 +3,28 @@ Traceback (most recent call last):
     HSP = ModelControl(inputdir, control_file)
   File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/BigRedButton.py", line 68, in __init__
     self.HS = CSVInterface(inputdir, control_file, self.ErrLog, run_type)
-  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 62, in __init__
+  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 64, in __init__
     self.BuildNodes()
-  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 830, in BuildNodes
+  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 844, in BuildNodes
     data = self.GetColumnarData()
-  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 769, in GetColumnarData
+  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 783, in GetColumnarData
     hydroveldata = self.gethydrovel()
-  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 472, in gethydrovel
-    if not IniParams["hydused"]:
-KeyError: 'hydused'
+  File "/home/steha/Heatsource/heatsource_version_Boku/heatsource900/CSV/CSVInterface.py", line 482, in gethydrovel
+    hydrovel = pd.DataFrame(d, columns=['Fkm', 'hydro_vel']).set_index("km")
+  File "/usr/local/lib/python2.7/dist-packages/pandas/core/frame.py", line 2450, in set_index
+    level = frame[col].values
+  File "/usr/local/lib/python2.7/dist-packages/pandas/core/frame.py", line 1743, in __getitem__
+    return self._getitem_column(key)
+  File "/usr/local/lib/python2.7/dist-packages/pandas/core/frame.py", line 1750, in _getitem_column
+    return self._get_item_cache(key)
+  File "/usr/local/lib/python2.7/dist-packages/pandas/core/generic.py", line 1058, in _get_item_cache
+    values = self._data.get(item)
+  File "/usr/local/lib/python2.7/dist-packages/pandas/core/internals.py", line 2806, in get
+    loc = self.items.get_loc(item)
+  File "/usr/local/lib/python2.7/dist-packages/pandas/core/index.py", line 1385, in get_loc
+    return self._engine.get_loc(_values_from_object(key))
+  File "pandas/index.pyx", line 133, in pandas.index.IndexEngine.get_loc (pandas/index.c:3795)
+  File "pandas/index.pyx", line 153, in pandas.index.IndexEngine.get_loc (pandas/index.c:3675)
+  File "pandas/hashtable.pyx", line 696, in pandas.hashtable.PyObjectHashTable.get_item (pandas/hashtable.c:12299)
+  File "pandas/hashtable.pyx", line 704, in pandas.hashtable.PyObjectHashTable.get_item (pandas/hashtable.c:12250)
+KeyError: 'km'
