@@ -7,6 +7,10 @@ This is a fork of the Heat Source computer model used by Oregon DEQ to simulate 
 
 
 
+### 05/01/2015 v 002
+dbf file support for hydrological velocity 
+* csvinteface.py -> gethydrovel()
+
 ### 13/12/2014 v 001
 Hydrological velocity as input file: configuration in the HeatSource_Control.csv
 * HYDROLOGICAL VELOCITY FILE(m/s)
