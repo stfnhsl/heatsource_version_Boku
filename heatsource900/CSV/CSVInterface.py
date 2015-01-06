@@ -477,8 +477,12 @@ class CSVInterface(object):
             print("dbf file")
             table = DBF(IniParams["inputdir"] + IniParams["hydvelfile"])
             d = []
+            i = 0
+            r = 5
             for record in table:
-                d.append((record['LENGTH']/1000, record['Geschw']))
+                if i % r == 0:
+                    d.append((record['LENGTH']/1000, record['GESCHW']))
+                i += 1
             hydrovel = pd.DataFrame(d, columns=['Fkm', 'hydro_vel']).set_index("Fkm")
             hydrovel.sort_index(inplace=True, ascending=False)
 
@@ -862,19 +866,19 @@ class CSVInterface(object):
         # stream kilometer 0.5, for instance, in that case
         vars = (IniParams["length"] * 1000)/IniParams["longsample"]
 
-        num_nodes = int(ceil((vars)/self.multiple))
+        num_nodes = int(ceil(vars/self.multiple))
         for i in range(0, num_nodes):
-            node = StreamNode(run_type=self.run_type,Q_mb=Q_mb)
+            node = StreamNode(run_type=self.run_type, Q_mb=Q_mb)
             print (data["km"])
             for k, v in data.iteritems():
                 print (k)
-                setattr(node, k, v[i+1])# Add one to ignore boundary node
+                setattr(node, k, v[i+1]) # Add one to ignore boundary node
             self.InitializeNode(node)
             self.Reach[node.km] = node
             print("Building Stream Nodes", i+1, num_nodes)
         # Find the mouth node and calculate the actual distance
         mouth = self.Reach[min(self.Reach.keys())]
-        mouth_dx = (vars)%self.multiple or 1.0 # number of extra variables if we're not perfectly divisible
+        mouth_dx = vars % self.multiple or 1.0 # number of extra variables if we're not perfectly divisible
         mouth.dx = IniParams["longsample"] * mouth_dx
 
 
