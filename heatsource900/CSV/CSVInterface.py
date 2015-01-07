@@ -478,9 +478,11 @@ class CSVInterface(object):
             table = DBF(IniParams["inputdir"] + IniParams["hydvelfile"])
             d = []
             i = 0
-            r = 5
+            dbfres = 20
+            dbfunit = 1000
+            skiprow = dbfres / (dbfunit / IniParams["dx"])
             for record in table:
-                if i % r == 0:
+                if i % skiprow == 0:
                     d.append((record['LENGTH']/1000, record['GESCHW']))
                 i += 1
             hydrovel = pd.DataFrame(d, columns=['Fkm', 'hydro_vel']).set_index("Fkm")
