@@ -577,7 +577,7 @@ def GetGroundFluxes(Wind, Humidity, T_Air, Elevation, phi, VHeight, ViewToSky, S
         P = 998.2 # kg/m3
         Gamma = 1003.5 * Pressure / (LHV * 0.62198) #mb/*C  Cuenca p 141
         Delta = 6.1275 * exp(17.27 * T_Air / (237.3 + T_Air)) - 6.1275 * exp(17.27 * (T_Air - 1) / (237.3 + T_Air - 1))
-        NetRadiation = F_Solar[5] + F_Longwave  #J/m2/s
+        NetRadiation = F_Solar5 + F_Longwave  #J/m2/s
         if NetRadiation < 0:
             NetRadiation = 0 #J/m2/s
         Ea = Wind_Function * (Sat_Vapor - Air_Vapor)  #m/s
