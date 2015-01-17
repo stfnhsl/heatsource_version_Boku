@@ -14,12 +14,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, print_function
-from math import pow, sqrt, log, atan, sin, cos, pi, tan, acos, exp,radians, log10
+from math import pow, sqrt, log, atan, sin, cos, pi, tan, acos, exp, radians, log10
 from random import randint
 from bisect import bisect
+from heatsource900.Dieties.IniParamsDiety import IniParams
 
 
-class HeatSourceError(Exception): pass
+class HeatSourceError(Exception):
+    pass
 
 
 def CalcSolarPosition(lat, lon, hour, min, sec, offset, JDC, radial_count):
@@ -48,8 +50,8 @@ def CalcSolarPosition(lat, lon, hour, min, sec, offset, JDC, radial_count):
 
     SunRadVector = (1.000001018 * (1 - pow(Eccentricity,2))) / (1 + Eccentricity * cos(toRadians*(GeoMeanAnomalySun + SunEqofCenter)))
 
-    #======================================================
-    #Equation of time (minutes)
+    # ======================================================
+    # Equation of time (minutes)
     Dummy = pow((tan(Obliquity * pi / 360)),2)
     Dummy1 = sin(toRadians*(2 * GeoMeanLongSun))
     Dummy2 = sin(toRadians*(GeoMeanAnomalySun))
@@ -111,9 +113,10 @@ def CalcSolarPosition(lat, lon, hour, min, sec, offset, JDC, radial_count):
     Daytime = 0
     if Altitude > 0.0:
             Daytime = 1
-    
-    if radial_count == 999:  #999 is a flag indicating the model should use the heat source 8 methods (same as 8 directions but no north)
-        dir = bisect((0.0,67.5,112.5,157.5,202.5,247.5,292.5),Azimuth)-1
+
+    # 999 is a flag indicating the model should use the heat source 8 methods (same as 8 directions but no north)
+    if radial_count == 999:
+        dir = bisect((0.0, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5), Azimuth)-1
     else:        
         Angle_Incr = 360.0 / radial_count
         DirNumbers = range(1,radial_count)
@@ -211,7 +214,7 @@ def GetStreamGeometryBoku(Q_est, W_b, z, n, S, D_est, dx, dt, u):
     Dispersion = (0.011 * pow(u, 2.0) * pow(Ww, 2.0)) / (D_est * Shear_Velocity)
     if (Dispersion * dt / pow(dx, 2.0)) > 0.5:
         Dispersion = (0.45 * pow(dx, 2)) / dt
-    #Dispersion = 50
+    # Dispersion = 50
     return D_est, A, Pw, Rh, Ww, u, Dispersion
 
 
@@ -222,8 +225,10 @@ def CalcMuskingum(Q_est, U, W_w, S, dx, dt):
     # Taken from the VB source.
     c_k = (5/3) * U  # Wave celerity
     X = 0.5 * (1 - Q_est / (W_w * S * dx * c_k))
-    if X > 0.5: X = 0.5
-    elif X < 0.0: X = 0.0
+    if X > 0.5:
+        X = 0.5
+    elif X < 0.0:
+        X = 0.0
     K = dx / c_k
     dt = dt
 
@@ -282,7 +287,7 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
 
     FullSunAngle,TopoShadeAngle,BankShadeAngle,RipExtinction,VegetationAngle = ShaderList
     # Make all math functions local to save time by preventing failed searches of local, class and global namespaces
-    #======================================================
+    # ======================================================
     # 0 - Edge of atmosphere
     # TODO: Original VB code's JulianDay calculation:
     # JulianDay = -DateDiff("d", theTime, DateSerial(year(theTime), 1, 1))
@@ -291,14 +296,14 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
     Solar_Constant = 1367 #W/m2
 
     ########################################################
-    #======================================================
+    # ======================================================
     # 1 - Above Topography
 
-    #import reference file at clear sky (= radiation above topography or "potential" = pot)
+    # import reference file at clear sky (= radiation above topography or "potential" = pot)
     # TODO: Schoener waere es statt dem Lookup table eine Parametrisierung zu haben...
     # BOKU: changed absolute to relative path
-    with open('./heatsource900/Stream/pot_rows.txt', 'r') as f1:
-         data1 = f1.readlines()
+    with open(IniParams["inputdir"] + 'pot_rows.txt', 'r') as f1:
+        data1 = f1.readlines()
     f1.closed
 
     for i in data1:
@@ -330,8 +335,8 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
 
     # import ratio between global radiation above topography at various atmosphere optical thickness and above atmosphere
     # BOKU: changed absolute to relative path
-    with open('./heatsource900/Stream/ratio_glopot.txt', 'r') as f1:
-         data1 = f1.readlines()
+    with open(IniParams["inputdir"] + 'ratio_glopot.txt', 'r') as f1:
+        data1 = f1.readlines()
     f1.closed
 
     for i in data1:
@@ -339,47 +344,47 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
 
     # import ratio between libRadtran simulated direct and global radiation at various atmospheric optical thicknesses
     # BOKU: changed absolute to relative path
-    with open('./heatsource900/Stream/ratio_dirglo.txt', 'r') as f2:
-             data2 = f2.readlines()
+    with open(IniParams["inputdir"] + 'ratio_dirglo.txt', 'r') as f2:
+        data2 = f2.readlines()
     f2.closed
 
     for i in data2:
         ratio_dirglo.append(i.split())
 
-    #find to which libRadtran simulated global/potential radiation ratio is the actual measured ratio the closest
+    # find to which libRadtran simulated global/potential radiation ratio is the actual measured ratio the closest
     ratio_glopot = min(enumerate(map(float,ratio_glopot_ref[zenith_act[0]])), key=lambda x: abs(x[1] - ratio_glopot_act))
 
-    #find libRadtran simulated dir/global ratio correspondant to global/pot ratio
+    # find libRadtran simulated dir/global ratio correspondant to global/pot ratio
     ratio_dirglo_act = ratio_dirglo[zenith_act[0]][ratio_glopot[0]]
 
-    #Calculate Diffuse Fraction
+    # Calculate Diffuse Fraction
     F_Diffuse[0] = 0
     F_Diffuse[1] = F_Glo[1]*(1 - float(ratio_dirglo_act))
     F_Direct[1] = F_Glo[1]* float(ratio_dirglo_act)
 
-    #print (F_Diffuse[1])
-    #print (F_Direct[1])
+    # print (F_Diffuse[1])
+    # print (F_Direct[1])
 
     ########################################################
-    #======================================================
-    #2 - Above Land Cover
+    # ======================================================
+    # 2 - Above Land Cover
     # Empty
     ########################################################
-    #======================================================
-    #3 - Above Stream Surface (Above Bank Shade)
-    Solar_blocked_byVeg = [0]*len(VegetationAngle) #amount of solar radiation blocked by each zone, plus one for diffuse
-    if Altitude <= TopoShadeAngle:    #>Topographic Shade IS Occurring<
+    # ======================================================
+    # 3 - Above Stream Surface (Above Bank Shade)
+    Solar_blocked_byVeg = [0]*len(VegetationAngle) # amount of solar radiation blocked by each zone, plus one for diffuse
+    if Altitude <= TopoShadeAngle:    # >Topographic Shade IS Occurring<
         F_Direct[2] = 0
         F_Diffuse[2] = F_Diffuse[1] * TopoFactor
         F_Direct[3] = 0
-    elif Altitude < FullSunAngle:  #Partial shade from veg
+    elif Altitude < FullSunAngle:  # Partial shade from veg
         F_Direct[2] = F_Direct[1]
         F_Diffuse[2] = F_Diffuse[1] * (1 - TopoFactor)
         Dummy1 = F_Direct[2]
         zone = len(VegetationAngle) - 1
         while zone >= 0:
-        #for vegangle in VegetationAngle:  #Loop to find if shading is occuring from veg. in that zone
-            if Altitude < VegetationAngle[zone]:  #veg shading is occurring from this zone
+            # for vegangle in VegetationAngle:  #Loop to find if shading is occuring from veg. in that zone
+            if Altitude < VegetationAngle[zone]:  # veg shading is occurring from this zone
                 fraction_passed = (1-(1-exp(-1* RipExtinction[zone] * (SampleDist/cos(radians(Altitude))))))
                 Solar_blocked_byVeg[zone] = Dummy1 - Dummy1*fraction_passed
                 Dummy1 *= (1-(1-exp(-1* RipExtinction[zone] * (SampleDist/cos(radians(Altitude))))))
@@ -392,16 +397,16 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
     F_Diffuse[3] = F_Diffuse[2] * ViewToSky
     diffuse_blocked = F_Diffuse[2]-F_Diffuse[3]
     Solar_blocked_byVeg.append(diffuse_blocked)
-    #4 - Above Stream Surface (What a Solar Pathfinder measures)
-    #Account for bank shade
-    if Altitude > TopoShadeAngle and Altitude <= BankShadeAngle:  #Bank shade is occurring
+    # 4 - Above Stream Surface (What a Solar Pathfinder measures)
+    # Account for bank shade
+    if TopoShadeAngle < Altitude <= BankShadeAngle:  # Bank shade is occurring
         F_Direct[4] = 0
         F_Diffuse[4] = F_Diffuse[3]
-    else:  #bank shade is not occurring
+    else:  # bank shade is not occurring
         F_Direct[4] = F_Direct[3]
         F_Diffuse[4] = F_Diffuse[3]
 
-    #Account for emergent vegetation
+    # Account for emergent vegetation
     if emergent:
         pathEmergent = VHeight / sin(radians(Altitude))
         if pathEmergent > W_b:
@@ -424,8 +429,8 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
             shadeDensityEmergent = 1 - exp(-ripExtinctEmergent * pathEmergent)
             F_Diffuse[4] = F_Diffuse[4] * (1 - shadeDensityEmergent)
 
-    #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    #5 - Entering Stream
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    # 5 - Entering Stream
     if Zenith > 80:
         Stream_Reflect = 0.0515 * (Zenith) - 3.636
     else:
@@ -436,11 +441,11 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
         Stream_Reflect = 0.091 * (1 / cos(Zenith * pi / 180)) - 0.0386
     F_Diffuse[5] = F_Diffuse[4] * 0.91
     F_Direct[5] = F_Direct[4] * (1 - Stream_Reflect)
-    #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    #6 - Received by Water Column
-    #=========================================================
-    #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    #7 - Received by Bed
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    # 6 - Received by Water Column
+    # =========================================================
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    # 7 - Received by Bed
     Water_Path = d_w / cos(atan((sin(radians(Zenith)) / 1.3333) / sqrt(-(sin(radians(Zenith)) / 1.3333) * (sin(radians(Zenith)) / 1.3333) + 1)))         #Jerlov (1976)
     Trans_Stream = 0.415 - (0.194 * log10(Water_Path * 100))
     if Trans_Stream > 1:
@@ -469,7 +474,7 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
     Dummy6 = Dummy5 * (1 - Trans_Stream)               #Diffuse Solar Radiation attenuated on way up
     F_Diffuse[6] = Dummy1 + Dummy4 + Dummy6
     F_Diffuse[7] = Dummy3 - Dummy4
-    #=========================================================
+    # =========================================================
 #        '   Flux_Solar(x) and Flux_Diffuse = Solar flux at various positions
 #        '       0 - Edge of atmosphere
 #        '       1 - Above Topography
@@ -489,7 +494,7 @@ def GetSolarFlux(hour, JD, Altitude, Zenith, glorad, d_w, W_b, Elevation, TopoFa
     F_Solar[7] = F_Diffuse[7] + F_Direct[7]
 #    return cloud, F_Solar, Solar_blocked_byVeg
 
-    #print ("Cloud1=", Cloud)
+    # print ("Cloud1=", Cloud)
     return F_Solar, Solar_blocked_byVeg
 
 
@@ -497,25 +502,25 @@ def GetGroundFluxes(Wind, Humidity, T_Air, Elevation, phi, VHeight, ViewToSky, S
                     dt, SedThermCond, SedThermDiff, calcalluv, T_alluv, P_w, W_w, emergent, penman, wind_a,
                     wind_b, calcevap, T_prev, T_sed, Q_hyp, F_Solar5, F_Solar7):
 
-    Cloud = 1 #TODO: Sollte weg, aber wenn nicht da dann Error: Sediment temperature out of bounds
-    #SedThermCond units of W/(m *C)
-    #SedThermDiff units of cm^2/sec
+    Cloud = 1 # TODO: Sollte weg, aber wenn nicht da dann Error: Sediment temperature out of bounds
+    # SedThermCond units of W/(m *C)
+    # SedThermDiff units of cm^2/sec
 
     SedRhoCp = SedThermCond / (SedThermDiff / 10000)
-    #NOTE: SedRhoCp is the product of sediment density and heat capacity
-    #since thermal conductivity is defined as density * heat capacity * diffusivity,
-    #therefore (density * heat capacity) = (conductivity / diffusivity)  units of (J / m3 / *C)
+    # NOTE: SedRhoCp is the product of sediment density and heat capacity
+    # since thermal conductivity is defined as density * heat capacity * diffusivity,
+    # therefore (density * heat capacity) = (conductivity / diffusivity)  units of (J / m3 / *C)
 
-    #Water Variable
+    # Water Variable
     rhow = 1000                             #density of water kg / m3
     H2O_HeatCapacity = 4187                 #J/(kg *C)
 
-    #Conduction flux (positive is heat into stream)
+    # Conduction flux (positive is heat into stream)
     F_Cond = SedThermCond * (T_sed - T_prev) / (SedDepth / 2)             #units of (W / m2)
-    #Calculate the conduction flux between deeper alluvium & substrate conditionally
+    # Calculate the conduction flux between deeper alluvium & substrate conditionally
     Flux_Conduction_Alluvium = SedThermCond * (T_sed - T_alluv) / (SedDepth / 2) if calcalluv else 0.0
 
-    #Hyporheic flux (negative is heat into sediment)
+    # Hyporheic flux (negative is heat into sediment)
     F_hyp = Q_hyp * rhow * H2O_HeatCapacity * (T_sed - T_prev) / (W_w * dx)
 
     NetFlux_Sed = F_Solar7 - F_Cond - Flux_Conduction_Alluvium - F_hyp
@@ -525,28 +530,28 @@ def GetGroundFluxes(Wind, Humidity, T_Air, Elevation, phi, VHeight, ViewToSky, S
         print(T_sed_new)
         raise Exception("Sediment temperature not bounded in 0<=temp<=50") # TODO RM
 
-    #=====================================================
-    #Calculate Longwave FLUX
-    #=====================================================
-    #Atmospheric variables
+    # =====================================================
+    # Calculate Longwave FLUX
+    # =====================================================
+    # Atmospheric variables
     Sat_Vapor = 6.1275 * exp(17.27 * T_Air / (237.3 + T_Air)) #mbar (Chapra p. 567)
     Air_Vapor = Humidity * Sat_Vapor
     Sigma = 5.67e-8 #Stefan-Boltzmann constant (W/m2 K4)
     Emissivity = 1.72 * (((Air_Vapor * 0.1) / (273.2 + T_Air)) ** (1 / 7)) * (1 + 0.22 * Cloud ** 2) #Dingman p 282
-    #======================================================
-    #Calcualte the atmospheric longwave flux
+    # ======================================================
+    # Calcualte the atmospheric longwave flux
     F_LW_Atm = 0.96 * ViewToSky * Emissivity * Sigma * (T_Air + 273.2) ** 4
-    #Calcualte the backradiation longwave flux
+    # Calcualte the backradiation longwave flux
     F_LW_Stream = -0.96 * Sigma * (T_prev + 273.2) ** 4
-    #Calcualte the vegetation longwave flux
+    # Calcualte the vegetation longwave flux
     F_LW_Veg = 0.96 * (1 - ViewToSky) * 0.96 * Sigma * (T_Air + 273.2) ** 4
-    #Calcualte the net longwave flux
+    # Calcualte the net longwave flux
     F_Longwave = F_LW_Atm + F_LW_Stream + F_LW_Veg
 
-    #===================================================
-    #Calculate Evaporation FLUX
-    #===================================================
-    #Atmospheric Variables
+    # ===================================================
+    # Calculate Evaporation FLUX
+    # ===================================================
+    # Atmospheric Variables
     Pressure = 1013 - 0.1055 * Elevation #mbar
     Sat_Vapor = 6.1275 * exp(17.27 * T_prev / (237.3 + T_prev)) #mbar (Chapra p. 567)
     Air_Vapor = Humidity * Sat_Vapor
@@ -562,16 +567,16 @@ def GetGroundFluxes(Wind, Humidity, T_Air, Elevation, phi, VHeight, ViewToSky, S
         Zd = 0 #Brustsaert (1982) p. 277 Dingman
         Zm = 2
         Friction_Velocity = Wind
-    #===================================================
-    #Wind Function f(w)
+    # ===================================================
+    # Wind Function f(w)
     Wind_Function = float(wind_a) + float(wind_b) * Friction_Velocity #m/mbar/s
 #        Wind_Function = 0.000000001505 + 0.0000000016 * Friction_Velocity #m/mbar/s
 
-    #===================================================
-    #Latent Heat of Vaporization
+    # ===================================================
+    # Latent Heat of Vaporization
     LHV = 1000 * (2501.4 + (1.83 * T_prev)) #J/kg
-    #===================================================
-    #Use Jobson Wind Function
+    # ===================================================
+    # Use Jobson Wind Function
     if penman:
         #Calculate Evaporation FLUX
         P = 998.2 # kg/m3
@@ -586,12 +591,12 @@ def GetGroundFluxes(Wind, Humidity, T_Air, Elevation, phi, VHeight, ViewToSky, S
         #Calculate Convection FLUX
         Bowen = Gamma * (T_prev - T_Air) / (Sat_Vapor - Air_Vapor)
     else:
-        #===================================================
-        #Calculate Evaporation FLUX
+        # ===================================================
+        # Calculate Evaporation FLUX
         Evap_Rate = Wind_Function * (Sat_Vapor - Air_Vapor)  #m/s
         P = 998.2 # kg/m3
         F_Evap = -Evap_Rate * LHV * P #W/m2
-        #Calculate Convection FLUX
+        # Calculate Convection FLUX
         if (Sat_Vapor - Air_Vapor) <> 0:
             Bowen = 0.61 * (Pressure / 1000) * (T_prev - T_Air) / (Sat_Vapor - Air_Vapor)
         else:

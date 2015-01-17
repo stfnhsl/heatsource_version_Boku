@@ -483,7 +483,7 @@ class CSVInterface(object):
             skiprow = dbfres / (dbfunit / IniParams["dx"])
             for record in table:
                 if i % skiprow == 0:
-                    d.append((record['LENGTH']/1000, record['GESCHW']))
+                    d.append((record['LENGTH']/dbfunit, record['GESCHW']))
                 i += 1
             hydrovel = pd.DataFrame(d, columns=['Fkm', 'hydro_vel']).set_index("Fkm")
             hydrovel.sort_index(inplace=True, ascending=False)
